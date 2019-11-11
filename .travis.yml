@@ -1,19 +1,22 @@
 sudo: enabled
 language: perl
 perl:
-- '5.26@cover'
-- '5.24@cover'
-- '5.20@cover'
-- '5.14@cover'
+- '5.28'
+- '5.26'
+- '5.24'
+- '5.20'
 matrix:
-  allow_failures:
-    - perl: "5.14@cover"
+  include:
+    - perl: 5.26
+      env: COVERAGE=1   # enables coverage+coveralls reporting
+  fast_finish: true
 cache:
    directories:
       - $HOME/perl5
 env:
   global:
-    secure: QZkNIahKdBIE/ANg04akx6MNgFItbLVSvGrR2By6rjHqrU9kllv862aVmcOjJw5/lcewEgRMgdK8ddhCKunW5HKpgW9CrkTi2GYVcmnJpw39ye7UnIIyOJM1N3YC+vWAaru+LJh8rHkXSfopKiiOjq9uTtfFCt+kngP7oIRKfPJ/7qdgKWvYpqKnqGoFoXghBWKe3V63xunILMkRVeTg+ogBOXbRy+3OU4WBIc4DsGdKOz+XkTecjLM9sdoyYLWUodLcmqwfCNGKWKwjVOaIe+859QtIoAEkclJtXunn6wYOeaumAJ+dILKZmOt4ORQxVYtVs+3W0eUl8+Z12xi6SGCenIQQGFHjxQgbjekXCiN56vf5LQUlxSEktjK67o9tq3+8VpgnPxqAgFOh4CvX4Ite3IT2+mPMegFOJavuyN/xOTuZgTe3sXDJzCfDBTQdBrb94ex/eZWZPn0M5Dkupiegh1CK6lJFVUwHpcJWb11SI2hzQRsGtPmlxDOfi48n23gVt7/bDeJS8rUlQoehF5fTVY1lMo4SZkB1Zs/ykm+NjPFg7h03j9E1msGFE/wQOZsN550GSxnpacZT9HandaxundiQHmVUfHHR54ieLxd3/xSTjqEpZcai21Oiq2ghmagGp8s+eRdNejMWLVWuHuWynFr72XU3LSXBW6YWyIc=
+    - 
+      secure: QZkNIahKdBIE/ANg04akx6MNgFItbLVSvGrR2By6rjHqrU9kllv862aVmcOjJw5/lcewEgRMgdK8ddhCKunW5HKpgW9CrkTi2GYVcmnJpw39ye7UnIIyOJM1N3YC+vWAaru+LJh8rHkXSfopKiiOjq9uTtfFCt+kngP7oIRKfPJ/7qdgKWvYpqKnqGoFoXghBWKe3V63xunILMkRVeTg+ogBOXbRy+3OU4WBIc4DsGdKOz+XkTecjLM9sdoyYLWUodLcmqwfCNGKWKwjVOaIe+859QtIoAEkclJtXunn6wYOeaumAJ+dILKZmOt4ORQxVYtVs+3W0eUl8+Z12xi6SGCenIQQGFHjxQgbjekXCiN56vf5LQUlxSEktjK67o9tq3+8VpgnPxqAgFOh4CvX4Ite3IT2+mPMegFOJavuyN/xOTuZgTe3sXDJzCfDBTQdBrb94ex/eZWZPn0M5Dkupiegh1CK6lJFVUwHpcJWb11SI2hzQRsGtPmlxDOfi48n23gVt7/bDeJS8rUlQoehF5fTVY1lMo4SZkB1Zs/ykm+NjPFg7h03j9E1msGFE/wQOZsN550GSxnpacZT9HandaxundiQHmVUfHHR54ieLxd3/xSTjqEpZcai21Oiq2ghmagGp8s+eRdNejMWLVWuHuWynFr72XU3LSXBW6YWyIc=
 git:
   depth: false
 before_install:
@@ -26,10 +29,14 @@ before_install:
  - wget -qO - http://debian.fhem.de/archive.key | sudo apt-key add -
  - echo "deb http://debian.fhem.de/nightly/ /" | sudo tee -a /etc/apt/sources.list
 install:
- - cpanm Device::SerialPort List::Util File::Find File::Basename Mock::Sub Test::More Test::Device::SerialPort Devel::Cover Devel::Cover::Report::Coveralls  JSON Net::SSLeay --notest 
+ - cpan-install --deps
+ - cpan-install --coverage
+ - cpanm Pod::Coverage Device::SerialPort List::Util File::Find File::Basename Mock::Sub Test::More Test::Device::SerialPort Devel::Cover Devel::Cover::Report::Coveralls JSON Net::SSLeay --notest 
  - sudo apt-get update -qq
  - sudo apt-get install fhem -y
  - sudo chown travis -R /opt/fhem
+before_script:
+ - coverage-setup
 script:
  - make test -j2
  - ./build_controls_list.sh 
@@ -40,6 +47,7 @@ script:
  - cp -R /opt/fhem/cover_db ./
  - if [ "$FULL_COVER" != "true" ]; then git --no-pager diff --diff-filter=d --name-only $TRAVIS_COMMIT_RANGE | grep .pm | xargs -I@ echo -select @ | xargs cover -report coveralls; fi
  - if [ "$FULL_COVER" = "true" ]; then git ls-tree --full-tree -r --name-only HEAD ./FHEM | grep .pm | xargs -I@ echo -select @ | xargs cover -report coveralls; fi
-
+after_success:
+  - coverage-report
 after_failure:
  - UnitTest/src/report_failure.sh
