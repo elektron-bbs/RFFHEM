@@ -30,7 +30,7 @@ before_install:
 install:
  - cpan-install --deps
  - cpan-install --coverage
- - cpanm Pod::Coverage Device::SerialPort List::Util File::Find File::Basename Mock::Sub Test::More Test::Device::SerialPort Devel::Cover Devel::Cover::Report::Coveralls JSON Net::SSLeay --notest 
+ - cpanm Device::SerialPort List::Util File::Find File::Basename Mock::Sub Test::More Test::Device::SerialPort JSON Net::SSLeay --notest 
  - sudo apt-get update -qq
  - sudo apt-get install fhem -y
  - sudo chown travis -R /opt/fhem
