@@ -1,3 +1,189 @@
+2020-10-03 - feature update 14_SD_AS (#896)
+
+* feature update 14_SD_AS
+new sensor type "raw"
+new CRC8 check (optional)
+Adjustment of log outputs
+new reading "batteryState"
+new reading "batteryVoltage"
+2020-10-01 - feature update 14_SD_AS
+
+new sensor type "raw"
+new CRC8 check (optional)
+Adjustment of log outputs
+new reading "batteryState"
+new reading "batteryVoltage"
+2020-09-30 - new protocol for BBQ temperature sensor GT-TMBBQ-01 (#894)
+2020-09-28 
+    14_SD_WS.pm:
+          feature: new protocol 106 for GT-TMBBQ-0   
+    SD_ProtocolData.pm:
+          new: protocol 106 for BBQ temperature sensor GT-TMBBQ-01
+    00_SIGNALduino.pm:
+          bugfix: fix PERL WARNING (#895)
+
+2020-09-26 
+    00_SIGNALduino.pm:
+          Feature: xFSK processing
+          Change: added N to send SN  xFSK sendCommand
+          Change: added new sub SIGNALduino_calcRSSI to simplification code
+          Change: fix some perlcritic warnings
+          Change: revised Parse_MN and loglevel
+          Change: revised logoutput text SIGNALduino_Get_Command
+          Change: revisions indented ( no tabs, only spaces ) and checked
+                  syntax with perl ./contrib/commandref_join.pl
+          New: added commandref rfmode & cc1101_reg_user
+          New: added hardware ESP32cc1101, MAPLEMINI_F103CB on attribute
+          New: added new attrib rfmode to changed to xFSK & revised commandref
+          New: added separat sub SIGNALduino_Attr_rfmode
+          New: added set cmd LaCrossePairForSec (for LaCrosse
+  SD_Protocols.pm:
+          Change: moved subs for converting in own package
+                  ConvLaCrosse, ConvKoppFreeControl and ConvPCA301
+          New: added function PreparingSend_KOPP_FC
+  SD_ProtocolData.pm
+          New: added rfmode, register rubric & comments
+          Change: fix perlcritic Severity 3 - hard tabs
+
+2020-09-15
+  14_SD_WS,pm: 
+         feature: protocol 27 new sensor EFS-3110A (#890)
+
+2020-08-17
+  14_FLAMINGO.pm: 
+         Change: Perlcritic (#887)
+
+2020-07-23 
+  14_SD_UT.pm:
+         Change: PerlCritic (#877)
+
+ 14_SD_BELL.pm:
+         Change: PerlCritic (#877)
+
+2020-07-20 
+  14_SD_UT.pm:
+      feature: new protocol 105 for remote control BF-301
+
+07.05.2020  
+  00_SIGNALduino.pm:
+          Bugfix: Fix some perlcritic 5 warnings
+          Bugfix: some operator fixes #835
+          Bugfix: Changed stingrefs to coderefs
+  10_FS10
+          Bugfix: revised for perlcritic
+  10_SD_GT
+          Bugfix: revised for perlcritic (#847)
+
+  14_SD_UT.pm
+          feature: add attribute UTfrequency in (#845)
+          change: delete "$attr{$name}{room} = "SD_UT" if( not defined( $attr{$name}{room} ) );"
+
+  SD_ProtocolData.pm
+          feature: new protocol 104 for remote control TR60C-1 (#844)
+          feature: new protocol 99 NAVARIS touch light switch (#841)
+          feature: new protocol 98 for wireless door bell GEA-028DB (#839)
+
+
+13.04.2020
+  00_SIGNALduino.pm
+   Workaround for bug #823, sending muliple commands causes collison
+   2020-04-10 - Attribute IODev deleted in different modules (#822)
+   Fix get raw command #820
+   revised logoutput to one structure
+   Changed require DevIO to use DevIO #829
+  14_SD_AS.pm: Attribute "IODev" in module deleted.
+  14_SD_WS_Maverick.pm: Attribute "IODev" in module deleted.
+  14_SD_WS07.pm: Attribute "IODev" in module deleted.
+  14_Hideki.pm: Attribute "IODev" in module deleted.
+  14_SD_WS.pm: Attribute "IODev" in module deleted.
+
+07.04.2020
+  00_SIGNALduino.pm 
+    new protocol 97 Momento remote control for wireless digital picture frame (#812)
+    automatic load cc1101 config after change value or restart
+    made multiple get commands more easy and robust to handle
+    new protocol 58 Weather F007-T (#803)
+    new protocol 27 for EuroChron EFTH-800 (#764)
+    extended cc1101 settings to ccconf reading
+
+    several retrys to initialize the SIGNALduino (#804)
+    prevent asyncOut if there is no client connected
+    flash via http: Fixed Filename extraction of URL if name is not found in http header
+    bug fixed set sduino cc1101_rAmpl 42 (#801)
+    Allow lower case letters for hex values ​​in set / get cc1101_reg
+    fixed set_bWidth command (#789)
+    bug fix set/get cc1101_patable (#789)
+    filtered possible set commands per device type 
+    new  protocol 26 - Remote control xavax 00111939
+    new protocol 20 - Remote control diesel heating
+
+    added meta information to 00_SIGNALduino.pm (#811)
+    missing values ​​added to the patable list.
+    restriction to permitted frequency ranges.
+
+  14_SD_WS.pm
+     new sensors added TFA/Froggit/Renkforce/Ambient Weather F007-T 
+     ew rain sensor TFA 30.3233.01 
+     implemented sub to be called by other modules to receive get command response
+     new sensor for EuroChron EFTH-800 (#764)
+
+  SD_UT.pm 
+     new model Novy_840039, revised SIGNALduuino readme & tests (#794)
+     new remote control xavax 00111939
+     new remote control with 4 buttons for diesel heating
+
+	 model Novy_840039, rename button text power_button to power_on_off
+     remove sort option
+
+     fix UTClock for all models
+     TR-502MSV bugfix, ident was only 8 bit, must be 12 bit long
+     RC_10 button set all work after renaming the device
+
+  10_SD_GT
+     add codes for button all in version 2
+     new modul for remote controls based on protocol GT-9000
+
+06.12.2019
+  00_SIGNALduino.pm: 
+    logoutput adjusted to standard -> $name: "sub", "Text"
+    remove unneeded get commands from webif for dummys
+    remove cc1101 get commands if no cc1101 connected
+    fixed serval Perlwarning and rare bug that caused fhem to crash
+    new Internal hasCC1101 added
+    allows flash nano328 and nanoCC1101 with new bootloader optiboot
+    allows flash radino with DEF /dev/serial/by-id/
+    new internal which provides error messages from flash     
+    during flash operation
+    add special reset for radinoCC1101
+    added specify arduino hardware type (ESP8266,ESP8266cc1101)
+    attribute ESP1_M is deleted
+    !! Please define new if hardware defined with old typ !!
+    fix some logging issues with disabled eventlogging
+    Optimze logging if eventlogging is 0 or unset
+    get availableFirmware - fix browser refresh
+    add support to flash microcontroller on Windows platform
+    New protocol TCM 218943, replaced u6 was in development
+    add definition for Medion OR28V RF Vista Remote Control
+  90_SIGNALduino_un.pm: 
+    clean some code
+  14_SD_RSL.PM: 
+    support for setExtensions added
+  14_SD_WS.pm: 
+    new weatherstation Lidl AURIOL AHFL 433 B2 IAN 314695
+  14_SD_Keeloq.pm: 
+    fix shade function
+    fix group control 9-16  | added enhancement (shade for groups)
+    reduced repeats for shade after test | fix serial send syntax
+    fixed Undefined subroutine &SD_Keeloq::FmtDateTime
+    fixed autocreate serial´s without 00 and displayview
+    added new model PR3-4207-002 (SCS Sentinel)
+    added new model RP_S1_HS_RF11 (Rademacher) 14_SD_WS_Maverick.pm:
+    added support for device TFA 14.1504
+    removed internals which are identical to readings
+    removed declaration of stateFormat
+    code optimization
+  14_SD_UT.pm: 
+    fixed Parse button all model RC_10 Forum#94327 & added model OR28V
 08.07.2019
  14_SD_UT.pm: Manax and mumbi device (RC_10) added send commands
 02.07.2019

@@ -1,18 +1,20 @@
 ##############################################
-# $Id: 90_SIGNALduino_un.pm 15479 2018-01-24 20:00:00 dev-r34 $
+# $Id: 90_SIGNALduino_un.pm 20749 2019-12-14 22:35:00Z Sidey $
 #
 # The file is part of the SIGNALduino project
 # see http://www.fhemwiki.de/wiki/SIGNALduino to support debugging of unknown signal data
 # The purpos is to use it as addition to the SIGNALduino
-# S. Butzek, 2015 | HomeAuto_User & elektron-bbs - 2018
 #
+# 2015-2018  S.Butzek
+# 2018-2020  S.Butzek, HomeAutoUser, elektron-bbs
 
 package main;
 
 use strict;
 use warnings;
 use POSIX;
-use List::Util qw(any);				# for any function
+use List::Util qw(any);         # for any function
+use lib::SD_Protocols;          # for any function
 
 my @bitcountlength = (0,0,0);		# array min|default|max
 
@@ -23,7 +25,7 @@ SIGNALduino_un_Initialize($)
   my ($hash) = @_;
 
 
-  $hash->{Match}     = '^[u]\d+#.*';
+  $hash->{Match}     = '^[u]\d+(?:.\d)?#.*';
   $hash->{DefFn}     = "SIGNALduino_un_Define";
   $hash->{UndefFn}   = "SIGNALduino_un_Undef";
   $hash->{AttrFn}    = "SIGNALduino_un_Attr";
@@ -102,45 +104,7 @@ SIGNALduino_un_Parse($$)
 	my $bitData= unpack("B$blen", pack("H$hlen", $rawData)); 
 	Log3 $hash, 4, "$name converted to bits: $bitData";
 		
-	if ($protocol == "6" && length($bitData)>=36)  ## Eurochron 
-	{   
-
-		  # EuroChron / Tchibo
-		  #                /--------------------------- Channel, changes after every battery change      
-		  #               /        / ------------------ Battery state 0 == Ok      
-		  #              /        / /------------------ unknown      
-		  #             /        / /  / --------------- forced send      
-		  #            /        / /  /  / ------------- unknown      
-		  #           /        / /  /  /     / -------- Humidity      
-		  #          /        / /  /  /     /       / - neg Temp: if 1 then temp = temp - 2048
-		  #         /        / /  /  /     /       /  / Temp
-		  #         01100010 1 00 1  00000 0100011 0  00011011101
-		  # Bit     0        8 9  11 12    17      24 25        36
-
-		my $SensorTyp = "EuroChron";
-		my $channel = "";
-		my $bin = substr($bitData,0,8);
-		my $id = sprintf('%X', oct("0b$bin"));
-		my $bat = int(substr($bitData,8,1)) eq "0" ? "ok" : "critical";
-		my $trend = "";
-		my $sendMode = int(substr($bitData,11,1)) eq "0" ? "automatic" : "manual";
-		my $temp = SIGNALduino_un_bin2dec(substr($bitData,25,11));
-		if (substr($bitData,24,1) eq "1") {
-		  $temp = $temp - 2048
-		}
-		$temp = $temp / 10.0;
-		my $hum = SIGNALduino_un_bin2dec(substr($bitData,17,7));
-		my $val = "T: $temp H: $hum B: $bat";
-		Log3 $hash, 4, "$name decoded protocolid: 6  $SensorTyp, sensor id=$id, channel=$channel, temp=$temp\n" ;
-
-	} elsif ($protocol == "15" && length($bitData)>=64)  ## TCM 
-	{  
-		my $deviceCode = $a[4].$a[5].$a[6].$a[7].$a[8];
-
-
-		Log3 $hash, 4, "$name found TCM doorbell. devicecode=$deviceCode";
-
-	} elsif ($protocol == "21" && length($bitData)>=32)  ##Einhell doorshutter
+	if ($protocol == 21 && length($bitData)>=32)  ##Einhell doorshutter
 	{
 		Log3 $hash, 4, "$name / Einhell doorshutter received";
 		
@@ -153,7 +117,7 @@ SIGNALduino_un_Parse($$)
 		
  	    
 		Log3 $hash, 4, "$name found doorshutter from Einhell. id=$id, channel=$channel, direction=$dir";
-	} elsif ($protocol == "23" && length($bitData)>=32)  ##Perl Sensor
+	} elsif ($protocol == 23 && length($bitData)>=32)  ##Perl Sensor
 	{
 		my $SensorTyp = "perl NC-7367?";
 		my $id = oct ("0b".substr($bitData,4,4));  
@@ -218,8 +182,10 @@ SIGNALduino_un_Parse($$)
 		my $hexcount = length($rawData);
 		my $bitDataInvert = $bitData;
 		$bitDataInvert =~ tr/01/10/; 			# invert message and check if it is possible to deocde now
-		my $rawDataInvert = SIGNALduino_b2h($bitDataInvert);
+		my $rawDataInvert = lib::SD_Protocols::binStr2hexStr($bitDataInvert);
 		
+		my $seconds = ReadingsAge($name, "state", 0);
+
 		readingsBeginUpdate($hash);
 		readingsBulkUpdate($hash, "state", $rawData,0);
 		readingsBulkUpdate($hash, "bitMsg", $bitData);
@@ -229,6 +195,7 @@ SIGNALduino_un_Parse($$)
 		readingsBulkUpdate($hash, "hexMsg_invert", $rawDataInvert);
 		readingsBulkUpdate($hash, "hexCount_or_nibble", $hexcount);
 		readingsBulkUpdate($hash, "lastInputDev", $ioname);
+		readingsBulkUpdate($hash, "past_seconds", $seconds);
 		readingsEndUpdate($hash, 1); 		# Notify is done by Dispatch
 		
 		### Example Logfile ###
