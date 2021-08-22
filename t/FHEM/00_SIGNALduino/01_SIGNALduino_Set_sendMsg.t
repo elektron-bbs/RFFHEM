@@ -1,7 +1,6 @@
 #!/usr/bin/env perl
 use strict;
 use warnings;
-
 use Test2::V0;
 use Test2::Tools::Compare qw{is item U D match hash array bag};
 use Mock::Sub;
@@ -72,6 +71,15 @@ $defs{cc1101dummyDuino}{cc1101_available} = 1;
       check =>  array  {
           item D();
             item 'SC;R=3;SR;P0=-2560;P1=2560;P3=-640;D=10101010101010113;SM;C=895;D=0101;F=10AB85550A;';
+        },
+    },
+    {
+      deviceName => q[cc1101dummyDuino],
+        testname =>  "set sendMsg ID:112 (P112#0101#R1) xFSK protocol",
+           input =>  "sendMsg P112#08C114844#R1",
+           check =>  array  {
+           item D();
+             item 'SN;R=1;D=08C114844;';
         },
     },
 

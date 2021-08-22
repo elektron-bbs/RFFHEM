@@ -1,6 +1,5 @@
 ###########################################################################################################################################
-# $Id: SD_ProtocolData.pm 3.4.4 2020-07-16 20:04:45Z Sidey $
-#
+# $Id: SD_ProtocolData.pm 3.4.4 2021-08-17 19:14:52Z elektron-bbs $
 # The file is part of the SIGNALduino project.
 # All protocol definitions are contained in this file.
 #
@@ -29,13 +28,13 @@
 # msgIntro         => ' '       # only MC - make combined message msgIntro.MC for sending ('SR;P0=-2560;P1=2560;P3=-640;D=10101010101010113;',)
 # msgOutro         => ' '       # only MC - make combined message MC.msgOutro for sending ('SR;P0=-8500;D=0;',)
 #
-# length_min       => ' '       # minimum number of bits of message length
+# length_min       => ' '       # minimum number of bits of message length (If reconstructBit is set, then set length_min=length_min-1)
 # length_max       => ' '       # maximum number of bits of message length
 # paddingbits      => ' '       # pad up to x bits before call module, default is 4. | --> option is active if paddingbits not defined in message definition !
 # paddingbits      => '1'       # will disable padding, use this setting when using dispatchBin
 # paddingbits      => '2'       # is padded to an even number, that is a maximum of 1 bit
 # remove_zero      => 1         # removes leading zeros from output
-# reconstructBit   => 1         # if set, then the last bit is reconstructed if the rest is missing
+# reconstructBit   => 1         # If set, then the last bit is reconstructed if the rest is missing. (If reconstructBit is set, then set length_min=length_min-1)
 #
 # developId        => 'm'       # logical module is under development
 # developId        => 'p'       # protocol is under development or to reserve IDs, the ID in the development attribute with developId => 'p' are only used without the other entries
@@ -72,8 +71,8 @@
 ##### notice #### or #### info ############################################################################################################
 # !!! Between the keys and values ​​no tabs, please use spaces !!!
 # !!! Please use first unused id for new protocols !!!
-# ID´s are currently unused: 78
-# ID´s need to be revised (preamble u): 5|19|21|22|23|24|25|28|31|36|40|52|54|56|59|63
+# ID´s are currently unused: 116 - 
+# ID´s need to be revised (preamble u): 5|19|21|22|23|25|28|31|36|40|52|59|63
 ###########################################################################################################################################
 # Please provide at least three messages for each new MU/MC/MS protocol and a URL of issue in GitHub or discussion in FHEM Forum
 # https://forum.fhem.de/index.php/topic,58396.975.html | https://github.com/RFD-FHEM/RFFHEM
@@ -87,7 +86,7 @@ package lib::SD_ProtocolData;
   use strict;
   use warnings;
 
-  our $VERSION = '1.23';
+  our $VERSION = '1.34';
 
   our %protocols = (
     "0" =>  ## various weather sensors (500 | 9100)
@@ -784,25 +783,29 @@ package lib::SD_ProtocolData;
         length_min      => '36',
         length_max      => '44',
       },
-    "24"  =>  ## visivon
+    "24"  =>  ## visivo
               # https://github.com/RFD-FHEM/RFFHEM/issues/39 @sidey79
-              # u24#9F7DF825029C10   MU;P0=132;P1=500;P2=-233;P3=-598;P4=-980;P5=4526;D=012120303030303120303030453120303121212121203121212121203121212121212030303030312030312031203030303030312031203031212120303030303120303030453120303121212121203121212121203121212121212030303030312030312031203030303030312031203031212120303030;CP=0;O;
+              # Visivo_7DF825 up    MU;P0=132;P1=500;P2=-233;P3=-598;P4=-980;P5=4526;D=012120303030303120303030453120303121212121203121212121203121212121212030303030312030312031203030303030312031203031212120303030303120303030453120303121212121203121212121203121212121212030303030312030312031203030303030312031203031212120303030;CP=0;O;
+              # https://forum.fhem.de/index.php/topic,42273.0.html @MikeRoxx
+              # Visivo_7DF825 up    MU;P0=505;P1=140;P2=-771;P3=-225;P5=4558;D=012031212030303030312030303030312030303030303121212121203121203120312121212121203120312120303031212121212031212121252031212030303030312030303030312030303030303121212121203121203120312121212121203120312120303031212121212031212121252031212030;CP=1;O;
+              # Visivo_7DF825 down  MU;P0=147;P1=-220;P2=512;P3=-774;P5=4548;D=001210303210303212121210303030321030303035321030321212121210321212121210321212121212103030303032103032103210303030303210303210303212121210303030321030303035321030321212121210321212121210321212121212103030303032103032103210303030303210303210;CP=0;O;
+              # Visivo_7DF825 stop  MU;P0=-764;P1=517;P2=-216;P3=148;P5=4550;D=012303012121212123012121212123012121212121230303030301230301230123030303012303030123012303030123030303012303030305012303012121212123012121212123012121212121230303030301230301230123030303012303030123012303030123030303012303030305012303012120;CP=3;O;
       {
-        name            => 'visivon remote',
+        name            => 'Visivo remote',
+        comment         => 'Remote control for motorized screen',
         id              => '24',
-        knownFreqs      => '',
-        one             => [3,-2],
-        zero            => [1,-5],
-        #one             => [3,-2],
-        #zero            => [1,-1],
-        start           => [30,-5],
-        clockabs        => 150,          #ca 150us
+        knownFreqs      => '315',
+        one             => [3,-1],  #  546,-182
+        zero            => [1,-4],  #  182,-728
+        start           => [25,-4], # 4550,-728
+        clockabs        => 182,
+        reconstructBit  => '1',
         format          => 'twostate',
-        preamble        => 'u24#',
-        #clientmodule    => '',
-        #modulematch     => '',
-        length_min      => '54',
-        length_max      => '58',
+        preamble        => 'P24#',
+        clientmodule    => 'SD_UT',
+        modulematch     => '^P24#',
+        length_min      => '55',
+        length_max      => '56',
       },
     "25"  =>  ## LES remote for led lamp
               # https://github.com/RFD-FHEM/RFFHEM/issues/40 @sidey79
@@ -1312,9 +1315,9 @@ package lib::SD_ProtocolData;
         preamble         => 'r',
         clientmodule     => 'Revolt',
         modulematch      => '^r[A-Fa-f0-9]{22}',
-        length_min       => '84',
+        length_min       => '96',
         length_max       => '120',
-        postDemodulation => sub { my $self=shift;  my ($name, @bit_msg) = @_;  my @new_bitmsg = splice @bit_msg, 0,88;  return 1,@new_bitmsg; },
+        postDemodulation => \&lib::SD_Protocols::postDemo_Revolt,
       },
     "46"  =>  ## Tedsen Fernbedienungen u.a. für Berner Garagentorantrieb GA401 und Geiger Antriebstechnik Rolladensteuerung
               # https://github.com/RFD-FHEM/RFFHEM/issues/91
@@ -1343,7 +1346,7 @@ package lib::SD_ProtocolData;
         preamble        => 'P46#',
         clientmodule    => 'SD_UT',
         modulematch     => '^P46#.*',
-        length_min      => '14',       # ???
+        length_min      => '17',       # old 14 -> too short to evaluate
         length_max      => '18',
       },
     "47"  =>  ## Maverick ET-732, ET-733; TFA 14.1504
@@ -1611,22 +1614,28 @@ package lib::SD_ProtocolData;
       },
     "56"  =>  ## Celexon Motorleinwand
               # https://forum.fhem.de/index.php/topic,52025.0.html @Horst12345
-              # MU;P0=5036;P1=-624;P2=591;P3=-227;P4=187;P5=-5048;D=0123412341414123234141414141414141412341232341414141232323234123234141414141414123414141414141414141234141414123234141412341232323250123412341414123234141414141414141412341232341414141232323234123234141414141414123414141414141414141234141414123234141412;CP=4;O;
-              # MU;P0=-228;P1=185;P2=-625;P3=593;P4=-5050;P5=5050;D=012121234523012301212123030121212121212121212301230301212121230303030123030303030301212123452301230121212303012121212121212121230123030121212123030303012303012121212121212301212121212121212121230121230121230303030301212123;CP=1;
+              # AC114_01B_00587B down MU;P0=5036;P1=-624;P2=591;P3=-227;P4=187;P5=-5048;D=0123412341414123234141414141414141412341232341414141232323234123234141414141414123414141414141414141234141414123234141412341232323250123412341414123234141414141414141412341232341414141232323234123234141414141414123414141414141414141234141414123234141412;CP=4;O;
+              # Alphavision Slender Line Plus motor canvas, remote control AC114-01B from Shenzhen A-OK Technology Grand Development Co.
+              # https://github.com/RFD-FHEM/RFFHEM/issues/906 @TheChatty
+              # AC114_01B_479696 up   MU;P0=-16412;P1=5195;P2=-598;P3=585;P4=-208;P5=192;D=01234523452525234345234525252343434345252345234345234525234523434525252525252525234525252525252525252525252345234345234343434343434341234523452525234345234525252343434345252345234345234525234523434525252525252525234525252525252525252525252345234345234343;CP=5;R=105;O;
+              # AC114_01B_479696 stop MU;P0=-2341;P1=5206;P2=-571;P3=591;P4=-211;P5=207;D=01234523452525234345234525252343434345252345234345234525234523434525252525252525234525252525252525252523452525234343452523452343434341234523452525234345234525252343434345252345234345234525234523434525252525252525234525252525252525252523452525234343452523;CP=5;R=107;O;
       {
-        name            => 'Celexon',
+        name           => 'AC114-xxB',
+        comment        => 'Remote control for motorized screen from Alphavision, Celexon',
         id              => '56',
         knownFreqs      => '433.92',
+        zero           => [1,-3],  #  200,-600
+        one            => [3,-1],  #  600,-200
+        start          => [25,-3], # 5000,-600
+        pause          => [-25],   # -5000, pause between repeats of send messages (clockabs*pause must be < 32768)
         clockabs        => 200,
-        zero            => [1,-3],
-        one             => [3,-1],
-        start           => [25,-3],
+        reconstructBit => '1',
         format          => 'twostate',
-        preamble        => 'u56#',
-        #clientmodule    => '',
-        #modulematch     => '',
-        length_min      => '56',
-        length_max      => '68',
+        preamble       => 'P56#',
+        clientmodule   => 'SD_UT',
+        modulematch    => '^P56#',
+        length_min     => '64', # 65 - reconstructBit = 64
+        length_max     => '65', # normal 65 Bit, 3 Bit werden aufgefuellt
       },
     "57"  =>  ## m-e doorbell fuer FG- und Basic-Serie
               # https://forum.fhem.de/index.php/topic,64251.0.html @rippi46
@@ -1780,25 +1789,24 @@ package lib::SD_ProtocolData;
         #length_max      => '',     # missing
         filterfunc      => 'SIGNALduino_filterMC',
       },
-    "64"  =>  ## WH2
-              # no decode!   MU;P0=-32001;P1=457;P2=-1064;P3=1438;D=0123232323212121232123232321212121212121212323212121232321;CP=1;R=63;
-              # no decode!   MU;P0=-32001;P1=473;P2=-1058;P3=1454;D=0123232323212121232123232121212121212121212121232321212321;CP=1;R=51;
-              # no value!    MU;P0=134;P1=-113;P3=412;P4=-1062;P5=1379;D=01010101013434343434343454345454345454545454345454545454343434545434345454345454545454543454543454345454545434545454345;CP=3;
+    "64"  =>  ## Fine Offset Electronics WH2, WH2A Temperature/Humidity sensor
+              # T: 17.4 H: 74   MU;P0=-28888;P1=461;P2=-1012;P3=1440;D=01212121212121232123232123212121232121232323232123212321212123232123232123212323232321212123232323232321212121;CP=1;R=202;
+              # T: 28.3 H: 42   MU;P0=-25696;P1=479;P2=-985;P3=1461;D=01212121212121232123232123212121232121232323212323232121232121232321232123212323232323232121212321232321232323;CP=1;R=215;
+              # T: 23   H: 64   MU;P0=134;P1=-113;P3=412;P4=-1062;P5=1379;D=01010101013434343434343454345454345454545454345454545454343434545434345454345454545454543454543454345454545434545454345;CP=3;
       {
         name            => 'WH2',
         comment         => 'temperature / humidity sensor',
         id              => '64',
-        knownFreqs      => '',
+        knownFreqs      => '433.92',
         one             => [1,-2],
         zero            => [3,-2],
         clockabs        => 490,
         clientmodule    => 'SD_WS',
         modulematch     => '^W64*',
         preamble        => 'W64#',
-        postamble       => '',
-        #clientmodule    => '',
+        clientmodule    => 'SD_WS',
         length_min      => '48',
-        length_max      => '54',
+        length_max      => '56',
       },
     "65"  =>  ## Homeeasy
               # on | vHE_EU   MS;P1=231;P2=-1336;P4=-312;P5=-8920;D=15121214141412121212141414121212121414121214121214141212141212141212121414121414141212121214141214121212141412141212;CP=1;SP=5;
@@ -2124,28 +2132,29 @@ package lib::SD_ProtocolData;
         length_max      => '44',
         remove_zero     => 1,          # Removes leading zeros from output
       },
-    # "78"  =>  ## GEIGER blind motors
-                # https://forum.fhem.de/index.php/topic,39153.0.html @fasch
-                # MU;P0=313;P1=1212;P2=-309;P4=-2024;P5=-16091;P6=2014;D=01204040562620404626204040404040462046204040562620404626204040404040462046204040562620404626204040404040462046204040562620404626204040404040462046204040;CP=0;R=236;
-                # MU;P0=-15770;P1=2075;P2=-264;P3=326;P4=-2016;P5=948;D=012121234121234341212121234341234343012125;CP=3;R=208;
-      # {
-        # name            => 'GEIGER blind motors',
-        # comment         => 'example remote control GF0001',
-        # id              => '78',
-        # knownFreqs      => '',
-        # developId       => 'y',
-        # zero            => [1,-6.6],
-        # one             => [6.6,-1],
-        # start           => [-53],
-        # clockabs        => 300,
-        # format          => 'twostate',
-        # preamble        => 'u78#',
-        # clientmodule    => 'SIGNALduino_un',
-        # #modulematch     => '^TX......',
-        # length_min      => '14',
-        # length_max      => '18',
-        # paddingbits     => '2'        # pad 1 bit, default is 4
-      # },
+    "78"  =>  ## Remote control SEAV BeSmart S4 for BEST Cirrus Draw (07F57800) Deckenluefter
+                # https://github.com/RFD-FHEM/RFFHEM/issues/909 @TheChatty
+                # BeSmart_S4_534 light_toggle MU;P0=-19987;P1=205;P2=-530;P3=501;P4=-253;P6=-4094;D=01234123412123434123412123412123412121216123412341212343412341212341212341212121612341234121234341234121234121234121212161234123412123434123412123412123412121216123412341212343412341212341212341212121;CP=1;R=70;
+                # BeSmart_S4_534 5min_boost   MU;P0=-23944;P1=220;P2=-529;P3=483;P4=-252;P5=-3828;D=01234123412123434123412123412121212121235123412341212343412341212341212121212123512341234121234341234121234121212121212351234123412123434123412123412121212121235123412341212343412341212341212121212123;CP=1;R=74;
+                # BeSmart_S4_534 level_up     MU;P0=-8617;P1=204;P2=-544;P3=490;P4=-246;P6=-4106;D=01234123412123434123412123412121234121216123412341212343412341212341212123412121612341234121234341234121234121212341212161234123412123434123412123412121234121216123412341212343412341212341212123412121;CP=1;R=70;
+                # BeSmart_S4_534 level_down   MU;P0=-14542;P1=221;P2=-522;P3=492;P4=-240;P5=-4114;D=01234123412123434123412123412121212341215123412341212343412341212341212121234121512341234121234341234121234121212123412151234123412123434123412123412121212341215123412341212343412341212341212121234121;CP=1;R=62;
+      {
+        name            => 'BeSmart_Sx',
+        comment         => 'Remote control SEAV BeSmart S4',
+        id              => '78',
+        knownFreqs      => '433.92',
+        zero            => [1,-2], # 250,-500
+        one             => [2,-1], # 500,-250
+        start           => [-14],  # -3500 + low time from last bit
+        clockabs        => 250,
+        reconstructBit  => '1',
+        format          => 'twostate',
+        preamble        => 'P78#',
+        clientmodule    => 'SD_UT',
+        modulematch     => '^P78#',
+        length_min      => '19', # length - reconstructBit = length_min
+        length_max      => '20',
+      },
     "79"  =>  ## Heidemann | Heidemann HX | VTX-BELL
               # https://github.com/RFD-FHEM/SIGNALDuino/issues/84
               # P79#A5E | ring   MU;P0=656;P1=-656;P2=335;P3=-326;P4=-5024;D=0123012123012303030301 24 230123012123012303030301 24 230123012123012303030301 24 2301230121230123030303012423012301212301230303030124230123012123012303030301242301230121230123030303012423012301212301230303030124230123012123012303030301242301230121230123030303;CP=2;O;
@@ -2405,10 +2414,15 @@ package lib::SD_ProtocolData;
               # P88#31EB8B8A008B48058 | button=up    MS;P1=399;P2=-421;P3=-4034;P4=800;P5=-815;P6=-15516;D=1342421515424242151515154215421515154242421542151515424242154215424242424242424242154242421542151542154242154242424242424242154215161212121212121212121212;CP=1;SP=3;R=86;O;m2;
               # P88#54F58AA3008B48038 | button=down  MS;P1=415;P2=-400;P3=-4034;P4=810;P5=-803;P6=-15468;D=1342154215421542421515151542154215154242421542154215421542424215154242424242424242154242421542151542154242154242424242424242421515161212121212121212121212;CP=1;SP=3;R=84;O;m2;
               # P88#CBDA84D2008B48018 | button=stop  MS;P1=417;P2=-400;P3=-4032;P4=-789;P5=811;P6=-15540;D=1314145252145214141414521414521452145252525214525214145214525214525252525252525252145252521452141452145252145252525252525252525214161212121212121212121212;CP=1;SP=3;R=86;O;m2;
+              ## remote Normstahl Garage DOORS - 1k AM HS 433MHz | AKHS 433-61 | one button @HomeAutoUser
+              # P88#A4630395D55800014 | buttone one  MS;P1=314;P2=-433;P3=-3801;P4=-799;P5=680;P6=-15288;D=131452145252145252521414525252141452525252525214141452521452145214141452145214521452145214145252525252525252525252525252525252521452161212121212121212121212;CP=1;SP=3;R=56;O;m2;
+              # P88#8B6988E6D55800014 | buttone one  MS;P0=684;P1=-436;P2=316;P3=-799;P4=-15280;P5=-3796;D=252301010123012323012323012301012323010101230101012323230101232301232301230123012301230123230101010101010101010101010101010101012301242121212121212121212121;CP=2;SP=5;R=18;O;m1;
+              # P88#CAADF1BFD55800010 | buttone one  MS;P1=-437;P2=311;P3=-3786;P4=-806;P5=676;P6=-14940;D=232424515124512451245124512424512424242424515151242451242424242424242451245124512451245124245151515151515151515151515151515151512451562121212121212121212121;CP=2;SP=3;R=55;O;m2;
+              # P88#CAD0BB54D55800010 | buttone one  MS;P0=686;P1=-425;P2=317;P3=-3796;P4=-802;P5=-14916;P6=240;D=232424010124012401242401240101010124012424240124240124012401240101242401240124012401240124240101010101010101010101010101010101012401052161616161616161212121;CP=2;SP=3;R=59;O;m2;
               ## KeeLoq is a registered trademark of Microchip Technology Inc.
       {
         name            => 'HCS300/HCS301',
-        comment         => 'remote controls Aurel TX-nM-HCS, enjoy motors HS, Rademacher RP-S1-HS-RF11, SCS Sentinel PR3-4207-002, Waeco MA650_TX',
+        comment         => 'remote controls Aurel TX-nM-HCS, enjoy motors HS, Normstahl ,Rademacher RP-S1-HS-RF11, SCS Sentinel PR3-4207-002, Waeco MA650_TX',
         id              => '88',
         knownFreqs      => '433.92 | 868.35',
         one             => [1,-2],        # PWM bit pulse width typ. 1.2 mS
@@ -2487,7 +2501,7 @@ package lib::SD_ProtocolData;
         clockabs        => 400,
         format          => 'twostate',
         preamble        => 'P91#',
-        length_min      => '36',
+        length_min      => '35', # 36 - reconstructBit = 35
         length_max      => '36',
         clientmodule    => 'SD_UT',
         #modulematch     => '^P91#.*',
@@ -2822,7 +2836,156 @@ package lib::SD_ProtocolData;
         modulematch     => '^W106#',
         length_min      => '22',
         length_max      => '22',
-      }
+      },
+
+    # "107" => reserved @elektron-bbs
+
+    "108" =>  ## BRESSER 5-in-1 Weather Center, Bresser Professional Rain Gauge - elektron-bbs 2021-05-02
+              # https://github.com/RFD-FHEM/RFFHEM/issues/607
+              # https://forum.fhem.de/index.php/topic,106594.msg1151467.html#msg1151467
+              # T: 11 H: 43 W: 1.7 R: 7.6     MN;D=E6837FD73FE8EFEFFEBC89FFFF197C8028C017101001437600000001;R=230;
+              # elektron-bbs
+              # T: 20.7 H: 28 W: 0.8 R: 354.4  MN;D=E7527FF78FF7EFF8FDD7BBCAFF18AD80087008100702284435000002;R=213;
+              # T: -2.8 H: 78 W: 0 R: 354.4    MN;D=E8527FFF2FFFEFD7FF87BBCAF717AD8000D000102800784435080000;R=214;
+              # T: 8 H: 88 W: 1.3 R: 364.8     MN;D=E6527FEB0FECEF7FFF77B7C9FF19AD8014F013108000884836000003;R=211;
+      {
+        name            => 'Bresser 5in1',
+        comment         => 'BRESSER 5-in-1 weather center, rain gauge',
+        id              => '108',
+        knownFreqs      => '868.35',
+        datarate        => '8.207',
+        sync            => '2DD4',
+        modulation      => '2-FSK',
+        rfmode          => 'Bresser_5in1',
+        register        => ['0001','0246','0346','042D','05D4','06FF','07C0','0802','0D21','0E65','0FE8','1088','114C','1202','1322','14F8','1551','1916','1B43','1C68'],
+        preamble        => 'W108#',
+        clientmodule    => 'SD_WS',
+        length_min      => '52',
+        method          => \&lib::SD_Protocols::ConvBresser_5in1,
+      },
+
+    # "109" => reserved @elektron-bbs
+    "110" =>  # ADE WS1907 Wetterstation mit Funk-Regenmesser 
+              # https://github.com/RFD-FHEM/RFFHEM/issues/965 docolli 2021-05-14
+              # T: 16.3 R: 26.6   MU;P0=970;P1=-112;P2=516;P3=-984;P4=2577;P5=-2692;P6=7350;D=01234343450503450503434343434505034343434343434343434343434343434505050503450345034343434343450345050345034505034503456503434505050343434343450503450503434343434505034343434343434343434343434343434505050503450345034343434343450345050345034505034503456503;CP=0;R=12;O;
+              # T: 12.6 R: 80.8   MU;P0=7344;P1=384;P2=-31380;P3=272;P4=-972;P5=2581;P6=-2689;P7=990;D=12345454545676745676745454545456745454545456767676745454545454545676767456745456767674545454545674567674545456745454545606745456767674545454545676745676745454545456745454545456767676745454545454545676767456745456767674545454545674567674545456745454545606;CP=7;R=19;O;
+              # T: 11.8 R: 82.1   MU;P0=-5332;P1=6864;P2=-2678;P3=994;P4=-977;P5=2693;D=01234545232323454545454523234523234545454545234545454523452345232345454545454523232345452323454545454545454523452323454545452323454521234545232323454545454523234523234545454545234545454523452345232345454545454523232345452323454545454545454523452323454545;CP=3;R=248;O;
+              # The sensor sends about every 45 seconds.
+      {
+        name            => 'ADE_WS_1907',
+        comment         => 'Weather station with rain gauge',
+        id              => '110',
+        knownFreqs      => '433.92',
+        one             => [-3,1], # 2700,-900
+        zero            => [-1,3], # -900,2700
+        start           => [8],    # 7200
+        clockabs        => 900,
+        format          => 'twostate',
+        clientmodule    => 'SD_WS',
+        modulematch     => '^W110#',
+        preamble        => 'W110#',
+        reconstructBit   => '1',
+        length_min      => '65',
+        length_max      => '66',
+      },
+    "111" =>  # Water Tank Level Monitor TS-FT002
+              # https://github.com/RFD-FHEM/RFFHEM/issues/977 docolli 2021-06-05
+              # T: 16.8 D: 111   MU;P0=-21110;P1=484;P2=-971;P3=-488;D=01213121212121213121312121312121213131312131313131212131313131312121212131313121313131213131313121213131312131313131313131313131212131312131312101213121212121213121312121312121213131312131313131212131313131312121212131313121313131213131313121213131312131;CP=1;R=26;O;
+              # T: 19 D: 47      MU;P0=-31628;P1=469;P2=-980;P3=-499;P4=-22684;D=01213121212121213121312121312121213131312131313131213131313131312121212131313121312121213131313131312131312131313131313131313131312121312131312141213121212121213121312121312121213131312131313131213131313131312121212131313121312121213131313131312131312131;CP=1;R=38;O;
+              # T: 20 D: 47      MU;P0=-5980;P1=464;P2=-988;P3=-511;P4=-22660;D=01213121212121213121312121312121213131312131313131213131313131312121212131313121313131213131313121312131312131313131313131313131213131312131312141213121212121213121312121312121213131312131313131213131313131312121212131313121313131213131313121312131312131;CP=1;R=38;O;
+              # The sensor sends normally every 180 seconds.
+      {
+        name            => 'TS-FT002',
+        comment         => 'Water tank level monitor with temperature',
+        id              => '111',
+        knownFreqs      => '433.92',
+        one             => [1,-2], # 480,-960
+        zero            => [1,-1], # 480,-480
+        start	          => [1,-2, 1,-1, 1,-2, 1,-2, 1,-2, 1,-2, 1,-2], # Sync 101.1111
+        clockabs        => 480,
+        format          => 'twostate',
+        clientmodule    => 'SD_WS',
+        modulematch     => '^W111#',
+        preamble        => 'W111#5F', # add sync 0101.1111
+        length_min      => '64',
+        length_max      => '64',
+      },
+    "112" =>  ## AVANTEK DB-LE
+              # Wireless doorbell & LED night light
+              # Sample: 20 Microseconds | 3 Repeats with ca. 1,57ms Pause
+              # A7129 -> FSK/GFSK Sub 1GHz Transceiver
+              #
+              #       PPPPPSSSSDDDDDDDDDD
+              #       |    |   |--------> Data
+              #       |    ||||---------> Sync
+              #       |||||-------------> Preambel
+              #
+              # URH:  aaaaa843484608a4224
+              # FHEM: MN;D=08C114844FDA5CA2;R=48;
+              #       MN;D=08C11484435D873B;R=47;
+              # !!! receiver hardware is required to complete in SD_BELL module !!!
+      {
+        name            => 'Avantek',
+        comment         => 'Wireless doorbell & LED night light',
+        id              => '112',
+        knownFreqs      => '433.3',
+        datarate        => '50.087',
+        sync            => '0869',
+        modulation      => '2-FSK',
+        rfmode          => 'Avantek',
+        register        => ['0001','0246','0301','0408','0569','06FF','0780','0802','0D10','0EAA','0F56','108A','11F8','1202','1322','14F8','1551','1916','1B43','1C40','20FB','2156','2211'],
+        preamble        => 'P112#',
+        clientmodule    => 'SD_BELL',
+        length_min      => '16',
+        length_max      => '16',
+      },
+    "113" =>  ## Wireless Grill Thermometer, Model name: GFGT 433 B1, WDJ7036, FCC ID: 2AJ9O-GFGT433B1, 
+              # https://github.com/RFD-FHEM/RFFHEM/issues/992 @ muede-de 2021-07-13
+              # The sensor sends more than 12 messages every 2 seconds.
+              # T:  24 T2:  29   MS;P1=-761;P2=249;P4=-3005;P5=718;P6=-270;D=24212156215656565621212121212121215621562121562156562156215656562156562156212121562121212121565621;CP=2;SP=4;R=34;O;m2;
+              # T: 203 T2: 300   MS;P1=-262;P2=237;P3=-760;P6=-2972;P7=721;D=26232371237171717123232323237171237171712371232323712323712371712371712371232323712371232371717123;CP=2;SP=6;R=1;O;m2;
+              # T: 201 T2: 257   MS;P2=-754;P3=247;P5=-2996;P6=718;P7=-272;D=35323267326767676732323232326767326767673232326767326732326732323267673267323232673232323232326732;CP=3;SP=5;R=3;O;m2;
+      {
+        name            => 'GFGT_433_B1',
+        comment         => 'Wireless Grill Thermometer',
+        id              => '113',
+        knownFreqs      => '433.92',
+        one             => [3,-1],  # 750,-250
+        zero            => [1,-3],  # 250,-750
+        sync            => [1,-12], # 250,-3000
+        clockabs        => 250,
+        format          => 'twostate',
+        preamble        => 'W113#',
+        clientmodule    => 'SD_WS',
+        modulematch     => '^W113#',
+        reconstructBit   => '1',
+        length_min      => '47',
+        length_max      => '48',
+      },
+    "114" =>  ## TR401 (Well-Light)
+                # https://forum.fhem.de/index.php/topic,121103.0.html @Jake @Ralf9
+                # TR401_0_2 off  MU;P0=311;P1=585;P2=-779;P3=1255;P4=-1445;P5=-23617;P7=-5646;CP=1;R=230;D=12323234141414141514123414123232341414141415141234141232323414141414151412341412323234141414141514123414123232341414141415141234141232323414141414151412341412323234141414141517141232323414141414150;p;
+                # TR401_0_2 off  MU;P0=-14293;P1=611;P2=-1424;P3=-753;P4=1277;P5=-23626;P6=-9108;P7=214;CP=1;R=240;D=1213421213434342121212121512134212134343421212121216701213421213434342121212121512134212134343421212121215121342121343434212121212151213421213434342121212121512134212134343421212121215121342121343434212121212151213421213434342121212121512134212134343421212121215121342121343434212121212151;p;
+                # TR401_0_2 on   MU;P0=-1426;P1=599;P2=-23225;P3=-748;P4=1281;P5=372;P6=111;P7=268;CP=1;R=235;D=0121343401013434340101010101252621343401013434340101010101252705012134340101343434010101010125;p;
+                # TR401_0_2 on   MU;P0=-14148;P1=-23738;P2=607;P3=-737;P4=1298;P5=-1419;P6=340;P7=134;CP=2;R=236;D=12343452523434345252525252161712343452523434345252525252160;p;
+      {
+        name            => 'TR401',
+        comment         => 'Remote control for example for Well-Light',
+        id              => '114',
+        one             => [-7,3],     #  -1400,600
+        zero            => [-4,6],     #  -800,1200
+        start           => [-118,3],   # -23600,600
+        clockabs        => 200,
+        format          => 'twostate',
+        preamble        => 'P114#',
+        modulematch     => '^P114#[13569BDE][13579BDF]F$',
+        clientmodule    => 'SD_UT',
+        length_min      => '12',
+        length_max      => '12',
+      },
+			
+    # "115" => reserved @elektron-bbs
+
     ########################################################################
     #### ###  register informations from other hardware protocols  #### ####
 
