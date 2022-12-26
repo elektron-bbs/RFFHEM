@@ -1,5 +1,7 @@
+#!/usr/bin/env perl
 use strict;
 use warnings;
+
 use Test2::V0;
 use Test2::Tools::Compare qw{is};
 
@@ -42,9 +44,10 @@ InternalTimer(time()+1, sub {
 		note($rmsg);
 		my %signal_parts=SIGNALduino_Split_Message($rmsg,$targetHash->{NAME});
 		my $rssi=$signal_parts{rssi};
+		my $rssiStr;
 		plan(2);
 
-		my ($rssi,$rssiStr)=SIGNALduino_calcRSSI($rssi);
+		($rssi,$rssiStr)=SIGNALduino_calcRSSI($rssi);
 		is($rssi,-36.5,'check return value -36.5 for input '.$signal_parts{rssi});
 		is($rssiStr,'RSSI = -36.5','check return string RSSI = -36.5 for input '.$signal_parts{rssi});
 	};

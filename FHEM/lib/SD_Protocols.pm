@@ -1,4 +1,5 @@
 ################################################################################
+# $Id: SD_ProtocolData.pm 3.5.x 2022-05-30 20:10:51Z sidey79 $
 #
 # The file is part of the SIGNALduino project
 # v3.5.x - https://github.com/RFD-FHEM/RFFHEM
@@ -12,8 +13,10 @@ package lib::SD_Protocols;
 use strict;
 use warnings;
 use Carp qw(croak carp);
-use Digest::CRC;
-our $VERSION = '2.04';
+use constant HAS_DigestCRC => defined eval { require Digest::CRC; };
+use constant HAS_JSON => defined eval { require JSON; };
+
+our $VERSION = '2.06';
 use Storable qw(dclone);
 use Scalar::Util qw(blessed);
 
@@ -141,7 +144,11 @@ sub LoadHashFromJson {
   my $json_text = do { local $/ = undef; <$json_fh> };
   close $json_fh or croak "Can't close '$filename' after reading";
 
-  use JSON;
+  if (!HAS_JSON)
+  {
+    croak("Perl Module JSON not availble. Needs to be installed.");
+  }
+
   my $json = JSON->new;
   $json = $json->relaxed(1);
   my $ver  = $json->incr_parse($json_text);
@@ -225,6 +232,14 @@ This function, will return all keys from the protocol hash
 
 sub getKeys {
   my $self = shift // carp 'Not called within an object';
+
+   my $filter = shift // undef;
+   if (defined $filter)
+   {
+     my (@keys) = grep { exists $self->{_protocols}->{$_}->{$filter} } keys %{$self->{_protocols}};
+     return @keys;
+   }
+
   my (@ret) = keys %{ $self->{_protocols} };
   return @ret;
 }
@@ -396,7 +411,118 @@ sub LengthInRange {
   return (1,q{});
 }
 
+
 ############################# package lib::SD_Protocols, test exists
+=item mc2dmc()
+
+This function is a helper for remudlation of a manchester signal to a differental manchester signal afterwards
+
+Input:  $object,$bitData (string)
+Output:
+        string of converted bits
+        or array (-1,"Error message")
+   
+=cut
+
+sub mc2dmc
+{
+  my $self      = shift // carp 'Not called within an object' && return (0,'no object provided');
+  my $bitData   = shift // carp 'bitData must be perovided' && return (0,'no bitData provided');
+
+  my @bitmsg;
+  my $i;
+
+	$bitData =~ s/1/lh/g; # 0 ersetzen mit low high
+	$bitData =~ s/0/hl/g; # 1 ersetzen durch high low ersetzen
+
+	for ($i=1;$i<length($bitData)-1;$i+=2) 
+  {
+    push (@bitmsg, (substr($bitData,$i,1) eq substr($bitData,$i+1,1)) ? 0 : 1);  # demodulated differential manchester
+  }
+  return join "", @bitmsg ; # demodulated differential manchester as string
+}
+
+
+############################# package lib::SD_Protocols, test exists
+=item mcBit2Funkbus()
+
+This function is a output helper for funkbus manchester signals.
+
+Input:  $object,$name,$bitData,$id,$mcbitnum
+Output:
+        hex string
+    or array (-1,"Error message")
+    
+=cut
+
+sub mcBit2Funkbus
+{
+  my $self      = shift // carp 'Not called within an object' && return (0,'no object provided');
+  my $name      = shift // 'anonymous';
+  my $bitData   = shift // carp 'bitData must be perovided' && return (0,'no bitData provided');
+  my $id        = shift // carp 'protocol ID must be provided' && return (0,'no protocolId provided');
+  my $mcbitnum  = shift // length $bitData;
+
+  return (-1,' message is to short') if ($mcbitnum < $self->checkProperty($id,'length_min',-1) );
+  return (-1,' message is to long') if (defined $self->getProperty($id,'length_max' ) && $mcbitnum > $self->getProperty($id,'length_max') );
+
+  $self->_logging( qq[lib/mcBitFunkbus, $name Funkbus: raw=$bitData], 5 );
+
+	$bitData =~ s/1/lh/g; # 0 ersetzen mit low high
+	$bitData =~ s/0/hl/g; # 1 ersdetzen durch high low ersetzen
+ 
+  my $s_bitmsg = $self->mc2dmc($bitData); # Convert to differential manchester
+  
+  if ($id == 119) {
+    my $pos = index($s_bitmsg,'01100');
+    if ($pos >= 0 && $pos < 5) {
+      $s_bitmsg = '001' . substr($s_bitmsg,$pos);
+      return (-1,'wrong bits at begin') if (length($s_bitmsg) < 48);
+    }  else {
+      return (-1,'wrong bits at begin');
+    }
+  } else {
+    $s_bitmsg = q[0] . $s_bitmsg;
+  }
+
+	my $data;
+	my $xor = 0;
+	my $chk = 0;
+	my $p   = 0;  # parity
+	my $hex = q[];
+	for (my $i=0; $i<6;$i++) {  # checksum
+		$data = oct(q[b].substr($s_bitmsg, $i*8,8));
+		$hex .= sprintf('%02X', $data);
+		if ($i<5) {
+			$xor ^= $data;
+		}	else {
+			$chk = $data & 0x0F;
+			$xor ^= $data & 0xE0;
+			$data &= 0xF0;
+		}
+		while ($data) {       # parity
+			$p^=($data & 1);
+			$data>>=1;
+		}
+	}
+  return (-1,'parity error')	if ($p == 1);
+
+	my $xor_nibble = (($xor & 0xF0) >> 4) ^ ($xor & 0x0F);
+	my $result = 0;
+	$result = ($xor_nibble & 0x8) ? $result ^ 0xC : $result;
+  $result = ($xor_nibble & 0x4) ? $result ^ 0x2 : $result;
+  $result = ($xor_nibble & 0x2) ? $result ^ 0x8 : $result;
+  $result = ($xor_nibble & 0x1) ? $result ^ 0x3 : $result;
+  
+  return (-1,'checksum error')	if ($result != $chk);
+
+	$self->_logging( qq[lib/mcBitFunkbus, $name Funkbus: len=]. length($s_bitmsg).q[ bit49=].substr($s_bitmsg,48,1).qq[ parity=$p res=$result chk=$chk msg=$s_bitmsg hex=$hex], 4 );
+  
+	return  (1,$hex);
+}
+
+
+
 =item MCRAW()
 
 This function is desired to be used as a default output helper for manchester signals.
@@ -1418,6 +1544,11 @@ sub postDemo_WS2000 {
         return (0, undef);
       }
       $dataindex = $index + $datastart + 1;
+      my $rest = $protolength - $dataindex;
+      if ($rest < 4) {
+        $self->_logging(qq[lib/postDemo_WS2000, Sensortyp $typ - ERROR rest of message < 4 ($rest)],4);
+      return (0, undef);
+      }
       $data = oct( '0b'.(join '', reverse @bit_msg[$dataindex .. $dataindex + 3]));
       if ($index == 5) {$adr = ($data & 0x07)}                 # Sensoradresse
       if ($datalength == 45 || $datalength == 46) {            # Typ 1 ohne Summe
@@ -1793,6 +1924,113 @@ sub ConvBresser_5in1 {
   return substr($hexData, 28, 24);
 }
 
+=item ConvBresser_6in1()
+
+This function checks CRC16 over bytes 2 - 17 and sum over bytes 2 - 17 (must be 255).
+
+Input:  $hexData
+Output: $hexData
+        scalar converted message on success 
+        or array (1,"Error message")
+
+=cut
+
+sub ConvBresser_6in1 {
+  my $self    = shift // carp 'Not called within an object';
+  my $hexData = shift // croak 'Error: called without $hexdata as input';
+  my $hexLength = length ($hexData);
+
+  return ( 1, 'ConvBresser_6in1, hexData is to short' ) if ( $hexLength < 36 ); # check double, in def length_min set
+
+  
+  return ( 1,'ConvBresser_6in1, missing module , please install modul Digest::CRC' ) 
+    if (!HAS_DigestCRC);
+  
+    
+
+  my $crc = substr( $hexData, 0, 4 );
+  my $ctx = Digest::CRC->new(width => 16, poly => 0x1021);
+  my $calcCrc = sprintf( "%04X", $ctx->add( pack 'H*', substr( $hexData, 4, 30 ) )->digest );
+  $self->_logging(qq[ConvBresser_6in1, calcCRC16 = 0x$calcCrc, CRC16 = 0x$crc],5);
+  return ( 1, qq[ConvBresser_6in1, checksumCalc:0x$calcCrc != checksum:0x$crc] ) if ($calcCrc ne $crc);
+
+  my $sum = 0;
+  for (my $i = 2; $i < 18; $i++) {
+    $sum += hex(substr($hexData,($i) * 2, 2));
+  }
+  $sum &= 0xFF;
+  $self->_logging(qq[ConvBresser_6in1, sum = $sum],5);
+  return ( 1, qq[ConvBresser_6in1, sum $sum != 255] ) if ($sum != 255);
+
+  return $hexData;
+}
+
+=item ConvBresser_7in1()
+
+This function makes xor 0xa over all bytes and checks LFSR_digest16
+
+Input:  $hexData
+Output: $hexDataXorA
+        scalar converted message on success 
+        or array (1,"Error message")
+
+=cut
+
+sub ConvBresser_7in1 {
+  my $self    = shift // carp 'Not called within an object';
+  my $hexData = shift // croak 'Error: called without $hexdata as input';
+  my $hexLength = length($hexData);
+
+  return (1, 'ConvBresser_7in1, hexData is to short') if ($hexLength < 44); # check double, in def length_min set
+  return (1, 'ConvBresser_7in1, byte 21 is 0x00') if (substr($hexData,42,2) eq '00'); # check byte 21
+
+  my $hexDataXorA ='';
+  for (my $i = 0; $i < $hexLength; $i++) {
+    my $xor = hex(substr($hexData,$i,1)) ^ 0xA;
+    $hexDataXorA .= sprintf('%X',$xor);
+  }
+  $self->_logging(qq[ConvBresser_7in1, msg=$hexData],5);
+  $self->_logging(qq[ConvBresser_7in1, xor=$hexDataXorA],5);
+
+  my $checksum = lib::SD_Protocols::LFSR_digest16(20, 0x8810, 0xba95, substr($hexDataXorA,4,40));
+  my $checksumcalc = sprintf('%04X',$checksum ^ hex(substr($hexDataXorA,0,4)));
+  $self->_logging(qq[ConvBresser_7in1, checksumCalc:0x$checksumcalc, must be 0x6DF1],5);
+  return ( 1, qq[ConvBresser_7in1, checksumCalc:0x$checksumcalc != checksum:0x6DF1] ) if ($checksumcalc ne '6DF1');
+
+  return $hexDataXorA;
+}
+
+=item LFSR_digest16()
+
+This function checks 16 bit LFSR
+
+Input:  $bytes, $gen, $key, $rawData
+Output: $lfsr
+
+=cut
+
+sub LFSR_digest16 {
+  my ($bytes, $gen, $key, $rawData) = @_;
+  carp "LFSR_digest16, too few arguments ($bytes, $gen, $key, $rawData)" if @_ < 4;
+  return (1, 'LFSR_digest16, rawData is to short') if (length($rawData) < $bytes * 2);
+	
+  my $lfsr = 0;
+  for (my $k = 0; $k < $bytes; $k++) {
+    my $data = hex(substr($rawData, $k * 2, 2));
+    for (my $i = 7; $i >= 0; $i--) {
+      if (($data >> $i) & 0x01) {
+        $lfsr ^= $key;
+      }
+      if ($key & 0x01) {
+        $key = ($key >> 1) ^ $gen;
+      } else {
+        $key = ($key >> 1);
+      }
+		}
+	}
+  return $lfsr;
+}
+
 ############################# package lib::SD_Protocols, test exists
 =item ConvPCA301()
 
@@ -1813,6 +2051,9 @@ sub ConvPCA301 {
   return ( 1,
 'ConvPCA301, Usage: Input #1, $hexData needs to be at least 24 chars long'
   ) if ( length($hexData) < 24 );    # check double, in def length_min set
+
+  return ( 1,'ConvPCA301, missing module , please install modul Digest::CRC' ) 
+    if (!HAS_DigestCRC);
 
   my $checksum = substr( $hexData, 20, 4 );
   my $ctx = Digest::CRC->new(
@@ -1930,12 +2171,18 @@ sub ConvLaCrosse {
   my $self    = shift // carp 'Not called within an object';
   my $hexData = shift // croak 'Error: called without $hexdata as input';
 
+  croak qq[ConvLaCrosse, Usage: Input #1, $hexData is not valid HEX]
+    if (not $hexData =~ /^[0-9a-fA-F]+$/xms)  ;    # check valid hexData
+
   return ( 1,'ConvLaCrosse, Usage: Input #1, $hexData needs to be at least 8 chars long'  )
     if ( length($hexData) < 8 )  ;    # check number of length for this sub to not throw an error
 
+  return ( 1,'ConvLaCrosse, missing module , please install modul Digest::CRC' ) 
+    if (!HAS_DigestCRC);
+
   my $ctx = Digest::CRC->new( width => 8, poly => 0x31 );
   my $calcCrc = $ctx->add( pack 'H*', substr( $hexData, 0, 8 ) )->digest;
-  my $checksum = sprintf( "%d", hex( substr( $hexData, 8, 2 ) ) );  # Todo: Needs some check to be hexadzimal conform
+  my $checksum = sprintf( "%d", hex( substr( $hexData, 8, 2 ) ) );
   return ( 1, qq[ConvLaCrosse, checksumCalc:$calcCrc != checksum:$checksum] )
     if ( $calcCrc != $checksum );
 

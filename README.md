@@ -1,10 +1,11 @@
-SIGNALduino - FHEM Modules Version 3.5.1+
+SIGNALduino - FHEM Modules Version 3.5.4
 
 Base Branch:
 
 [![codecov](https://codecov.io/gh/RFD-FHEM/RFFHEM/branch/master/graph/badge.svg?token=szkoYvQwNV)](https://codecov.io/gh/RFD-FHEM/RFFHEM)
 ![Perl Modules&FHEM Unittests](https://github.com/RFD-FHEM/RFFHEM/workflows/Perl%20Modules&FHEM%20Unittests/badge.svg)
 ![controlsFile](https://github.com/RFD-FHEM/RFFHEM/workflows/controlsFile/badge.svg)
+
 Counterpart of SIGNALDuino uC, it's the code for FHEM to work with the data received from the uC
 
 Supported Devices / Protocols
@@ -23,7 +24,8 @@ Supported Devices / Protocols
 |BF-301 | Remote control|
 |benon (Semexo OHG) | Remote control (BH-P)|
 |BOSCH / Neff / Refsta Topdraft | Remote control (SF01 01319004, SF01 01319004 v2)|
-|BRESSER 5-in-1, Professional Rain Gauge, TemeoTrend | Weather Station, Rain Gauge, Thermo-/Hygro Sensor |
+|BRESSER 5-in-1, 6-in-1, 7-in-1, Professional Rain Gauge, TemeoTrend, SM60020 Soil moisture sensor | Weather Station, Rain Gauge, Thermo-/Hygro Sensor |
+|Busch-Transcontrol HF | Remote control (6861)|
 |CAME TOP 432EV | Remote control |
 |CTW600, WH1080, WH2315 | Weather station |
 |Clarus | remote power socket|
@@ -37,7 +39,10 @@ Supported Devices / Protocols
 |FA21RF | Smoke detector | 
 |FHT80 | Roomthermostat (only receive) |
 |FHT80TF | door/window switch |
+|Fine Offset WH51, aka ECOWITT WH51, aka Froggit DP100, aka MISOL/1 | Soil moisture sensor |
+|Fine Offset WH57, aka Ambient Weather WH31L, aka Froggit DP60 | Thunder and lightning sensor |
 |FLAMINGO | Flamingo smoke detector |
+|Fody E42 | Temperature/humidity sensor (protocol BRESSER 5-in-1) |
 |FS10 | Remote control |
 |FS20 | Remote control |
 |FT0073 | Weather sensors|
@@ -62,7 +67,9 @@ Supported Devices / Protocols
 |MANAX MX-RCS250 | Remote control |
 |m-e VTX and BASIC | wireless bell |
 |Maverick | Wireless BBQ thermometer |
+|Mebus HQ7312-2 | Weather station |
 |Medion OR28V | Remote control |
+|Meikee | Remote controls for Meikee LED lights e.g. RGB LED Wallwasher Light and Solar Flood Light |
 |Momento | Remote control for wireless digital picture frame |
 |Mumbi m-FS300 | Remote control |
 |Navaris 44344.04 | Touch light switch |
@@ -80,19 +87,21 @@ Supported Devices / Protocols
 |RH787T, HT12E based | Remote control |
 |RIO, enjoy motors HS |  Remote control |
 |revolt | Energy sensors |
+|Rojaflex HSR-15, HSTR-15 | Remote control |
 |s014/TCM/Conrad | Weather sensor |
 |Somfy RTS | Shutters from Somfy|
-|technoline Weatherstation WS 6750/TX70DTH| Weather sensor and station |
 |TCM 234759 Tchibo | wireless bell |
 |TCM97001,Logilink, Pearl NC, and similar,Lifetec LT3594 | Weather sensor |
-|TFA 30.3200, 30.3208.02, 30.3209.02, 30.3221.02, 30.3222.02, 30.3228.02, 30.3229.02, 35.1140.01 | Weather sensors and stations |
-|TS-K108W11 | wireless bell |
+|technoline Weatherstation WS 6750/TX70DTH | Weather sensor and station |
 |Techmar Garden Lights | Remote control |
-|Technoline TX3  | Weather sensor |
+|Technoline TX3 | Weather sensor |
 |Tedsen SKX1xx, SKX2xx, SKX4xx, SKX6xx | Remote control |
+|Temola TM40 | Wireless grill, meat, roast thermometer with 4 temperature sensors |
+|TFA 30.3151, 30.3152, 30.3153, 30.3157, 30.3200, 30.3208.02, 30.3209.02, 30.3221.02, 30.3222.02, 30.3228.02, 30.3229.02, 30.3233.01, 30.3251.10, 35.1077.54.S2, 35.1140.01 | Weather sensors and stations |
 |TR401 | Remote control |
 |TR60C-1 | Remote control with touch screen |
 |TS-FT002 | Water tank level monitor with temperature |
+|TS-K108W11 | wireless bell |
 |Visivo | Remote control for motorized screen |
 |VLOXO | wireless bell |
 |WH2, WH2A | Temperature/humidity sensor (TFA 30.3157 only temp)|
@@ -111,18 +120,26 @@ Prepare your Arduino nano. Look at http://www.fhemwiki.de/wiki/Datei:Fhemduino_s
 for hardware setup.
 
 
-Connect the Arduino via USB to your FHEM Server and define the device with it's new port:
-Example: ```define SDuino SIGNALduino /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0@57600```
-You have to adapt this to your environment.
+Connect the uC via USB to your FHEM Server and define the device with it's new port:
 
-If you made your setup with an Arduino Nano, you can use this command to load the firmware on your device:
-set SDuino flash
+Example: ```define SDuino SIGNALduino /dev/serial/by-id/usb-1a86_USB2.0-Serial-if00-port0@57600```
+
+
+You have to adapt this to your environment.
+Connection via network is also possible.
+
+If you made your setup with an Arduino, you can use this command to load the firmware on your device:
+
+```set SDuino flash```
 
 If this fails, you may need to install avrdude on your system.
-On a raspberry pi it is done via ```sudo apt-get install avrdude```
+On a raspberry pi it is done via
+
+```sudo apt-get install avrdude```
 
 More Information
 =====
 Look at the FHEM Wiki, for more Information: http://www.fhemwiki.de/wiki/SIGNALDuino
-Forum thread is at: http://forum.fhem.de/index.php/topic,38831.0.html
+
+Forum Support is at: https://forum.fhem.de/index.php/board,29.0.html
 

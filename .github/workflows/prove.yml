@@ -1,5 +1,10 @@
 name: Perl Modules&FHEM Unittests
-on: [push, pull_request]
+on: 
+  push:
+    branches:
+      - '*'
+      - '!push-action/**/**'
+  pull_request:
 
 jobs:
   libModTests:
@@ -7,59 +12,67 @@ jobs:
     strategy:
       matrix:
         os: ['ubuntu-latest']
-        perl: [ '5.22', '5.24', '5.26' ]
+        perl: [ '5.24', '5.28','5.32' ]
     name: Perl ${{ matrix.perl }} on ${{ matrix.os }}
     steps:
-    - uses: actions/checkout@v2.3.4
-    - uses: shogo82148/actions-setup-perl@v1.12.2
+    - uses: actions/checkout@v3
+    - uses: shogo82148/actions-setup-perl@v1.20.1
       with:
         perl-version: ${{ matrix.perl }}
         install-modules-with: cpanm
         install-modules-args: --no-interactive -v --installdeps
 
-    #- name: Install deps via cpanm
-      #run: |
-        #cpanm --notest --no-interactive -v --installdeps .
-        #cpanm --notest --no-interactive -v Devel::Cover::Report::Clover
-        #cpanm --no-interactive -v Storable
-    - name: install fhem via deb package
+    - name: Install FHEM via debian nightly 
+      uses: fhem/setup-fhem@v1.0.1
+
+    - name: change ownership of /opt/fhem
       run: |
-        wget -qO - http://debian.fhem.de/archive.key | sudo apt-key add -
-        echo "deb http://debian.fhem.de/nightly/ /" | sudo tee -a /etc/apt/sources.list
-        sudo apt-get update -qq
-        sudo apt-get install fhem -y
-        sudo chown -R --reference=Makefile /opt/fhem
-        sudo systemctl stop fhem
-#    - name: Setup tmate session
-#      uses: mxschmitt/action-tmate@v1
+        sudo chown -R --reference=cpanfile /opt/fhem
+
     - name: run prove on perl modules (testscripts)
       run: |
-        prove --exec 'perl -MDevel::Cover=-silent,1 -I FHEM ' -I FHEM -r -v t/SD_Protoco* 
-    - name: Create clover report  
+        echo "::remove-matcher owner=perl::"
+        prove -j3 --exec 'perl -MDevel::Cover=-silent,1 -I FHEM '  -I FHEM -r -v t/SD_Protoco*  > >(tee -a ${GITHUB_WORKSPACE}/testOutput.stdout) 2> >(tee -a ${GITHUB_WORKSPACE}/testOutput.stderr >&2)
+    - name: run prove fhem testsuite ${{ matrix.perl }}
+      run: |
+        cp -R ${GITHUB_WORKSPACE}/FHEM/* ${FHEM_DIR}/FHEM/
+        cp -R ${GITHUB_WORKSPACE}/lib/* ${FHEM_DIR}/lib/
+        prove -j3 --exec 'perl -MDevel::Cover=-silent,1 fhem.pl -t' -I FHEM -v -r ${GITHUB_WORKSPACE}/t/FHEM/  > >(tee -a ${GITHUB_WORKSPACE}/testOutput.stdout) 2> >(tee -a ${GITHUB_WORKSPACE}/testOutput.stderr >&2)
+      working-directory: /opt/fhem/
+      env:
+        FHEM_DIR: /opt/fhem
+    - name: Create clover report for perl Modules
       run: cover -report clover
-    - uses: codecov/codecov-action@v2.0.2
+    - uses: codecov/codecov-action@v3.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: ./cover_db/clover.xml
         flags: unittests,perl,modules
         name: perl modules (testscripts) ${{ matrix.perl }}
-    - name: run prove fhem testsuite ${{ matrix.perl }}
-      run: |
-        cp -R ${GITHUB_WORKSPACE}/FHEM/* ${FHEM_DIR}/FHEM/
-        # cp -R ${GITHUB_WORKSPACE}/lib/* ${FHEM_DIR}/lib/
-        #find ${GITHUB_WORKSPACE}/t/FHEM -maxdepth 1  -regex '.*/t/FHEM/[0-9][0-9]_.*' -print0 | xargs -0 -I'{}' prove --exec 'perl -MDevel::Cover=-silent,1 fhem.pl -t' -I FHEM -r -vv -r "{}"
-        prove --exec 'perl -MDevel::Cover=-silent,1 fhem.pl -t' -I FHEM -r -vv -r ${GITHUB_WORKSPACE}/t/FHEM/
-      working-directory: /opt/fhem/
-      env:
-        FHEM_DIR: /opt/fhem
-    - name: Create clover report
+
+    - name: Create clover report for fhem tests
       working-directory: /opt/fhem/
       run: cover -report clover
-    - uses: codecov/codecov-action@v2.0.2
+    - uses: codecov/codecov-action@v3.1.1
       with:
         token: ${{ secrets.CODECOV_TOKEN }}
         file: /opt/fhem/cover_db/clover.xml
         flags: unittests,fhem,modules
         name: fhem (testscripts) ${{ matrix.perl }} 
 
-   
+    - uses: reviewdog/action-setup@v1
+      if: always() && github.event_name == 'pull_request'
+      with:
+        reviewdog_version: latest 
+    
+    - name: Run reviewdog
+      if: always() && github.event_name == 'pull_request' && !cancelled()
+      env:
+        REVIEWDOG_GITHUB_API_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      run: |
+          reviewdog  \
+            -name=perl-${{ matrix.perl }} \
+            -reporter="github-pr-check" \
+            -filter-mode="file" \
+            --diff="git diff ${{ github.base_ref }}" \
+            
