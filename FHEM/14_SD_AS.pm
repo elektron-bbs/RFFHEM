@@ -1,5 +1,5 @@
 ##############################################
-# $Id: 14_SD_AS.pm 350 2022-12-29 23:35:50Z sidey79 $
+# $Id: 14_SD_AS.pm 350 2023-01-23 17:24:05Z sidey79 $
 # The file is part of the SIGNALduino project
 # see http://www.fhemwiki.de/wiki/SIGNALduino
 # and was created to provide support for self build sensors.
@@ -15,10 +15,11 @@ use strict;
 use warnings;
 use POSIX;
 use FHEM::Meta;
+use FHEM::Core::Utils::Math;
 
 #####################################
 sub
-SD_AS_Initialize($)
+SD_AS_Initialize
 {
   my ($hash) = @_;
 
@@ -65,7 +66,7 @@ SD_AS_Initialize($)
 
 #####################################
 sub
-SD_AS_Define($$)
+SD_AS_Define
 {
   my ($hash, $def) = @_;
   my @a = split("[ \t][ \t]*", $def);
@@ -85,7 +86,7 @@ SD_AS_Define($$)
 
 #####################################
 sub
-SD_AS_Undef($$)
+SD_AS_Undef
 {
   my ($hash, $name) = @_;
   delete($modules{AS}{defptr}{$hash->{CODE}}) if($hash && $hash->{CODE});
@@ -94,7 +95,7 @@ SD_AS_Undef($$)
 
 #####################################
 sub
-SD_AS_Parse($$)
+SD_AS_Parse
 {
 	my ($iohash,$msg) = @_;
 	my (undef ,$rawData) = split("#",$msg);
@@ -205,7 +206,7 @@ SD_AS_Parse($$)
 		$batteryVoltage = $Sigval;
 	  # $bat = (hex(substr($msg,7,2))>>1)&3; # ???
 		$bat = hex(substr($rawData,2,2))>>6;
-		$Sigval = round($Sigval / 1000, 2);	# Vcc is send in millivolts
+		$Sigval = FHEM::Core::Utils::Math::round($Sigval / 1000, 2);	# Vcc is send in millivolts
 		$val = "V: $Sigval";
 	}
 	elsif ($model eq "raw") { # 10
@@ -275,7 +276,7 @@ SD_AS_Parse($$)
 #Initial value: 0x0
 #See http://www.maxim-ic.com/appnotes.cfm/appnote_number/27
 
-sub SD_AS_crc($$)
+sub SD_AS_crc
 {
   my ($lcrc,$ldata) = @_;
   my $i;
