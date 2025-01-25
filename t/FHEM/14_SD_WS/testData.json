@@ -470,7 +470,7 @@
                   "comment" : "#1"
                }
             ]
-         },
+         }
       ],
       "id" : "38",
       "module" : "SD_WS",
@@ -2674,6 +2674,18 @@
             "tests" : [
                {
                   "comment" : "#1"
+               }
+            ]
+         },
+         {
+            "comment" : "Ecowitt WH31 Temp Hum sensor - wrong CRC",
+            "dmsg" : "W125#302282623705616C000200",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#2"
                }
             ]
          }
