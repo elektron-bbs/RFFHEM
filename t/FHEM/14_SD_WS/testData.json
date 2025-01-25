@@ -1702,6 +1702,18 @@
                   "comment" : "#2"
                }
             ]
+         },
+         {
+            "comment" : "Weather station with rain gauge - wrong checksum",
+            "dmsg" : "W110#9C1B042B039805874",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#3"
+               }
+            ]
          }
       ],
       "id" : "110",
