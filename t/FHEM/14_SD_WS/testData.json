@@ -814,6 +814,18 @@
                   "comment" : "#1"
                }
             ]
+         },
+         {
+            "comment" : "Rain sensor for base station 47.3005.01 / decode as MS - wrong CRC",
+            "dmsg" : "W54#3896E1066AAA0077",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#2"
+               }
+            ]
          }
       ],
       "id" : "54.1",
