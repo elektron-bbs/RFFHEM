@@ -2339,6 +2339,18 @@
                   "comment" : "#2"
                }
             ]
+         },
+         {
+            "comment" : "Weather station with 30.3151 (T/H-transmitter), 30.3152 (rain gauge), 30.3153 (anemometer) - wrong CRC",
+            "dmsg" : "W120#FEDFD52C040444920615",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#2"
+               }
+            ]
          }
       ],
       "id" : "120",
