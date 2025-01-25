@@ -2734,6 +2734,18 @@
                   "comment" : "#1"
                }
             ]
+         },
+         {
+            "comment" : "Sainlogic weather stations - wrong CRC",
+            "dmsg" : "W129#FFD4CBD80D11A73C06841B5AC1A14865",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#2"
+               }
+            ]
          }
       ],
       "id" : 129,
