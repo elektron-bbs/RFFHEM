@@ -2463,6 +2463,18 @@
                   "comment" : "#0"
                }
             ]
+         },
+         {
+            "comment" : "Inkbird IBS-P01R Pool Thermometer, Inkbird ITH-20R - wrong CRC",
+            "dmsg" : "W123#D3910F00010301207E43FE0014055802772A",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
+               }
+            ]
          }
       ],
       "id" : "123",
