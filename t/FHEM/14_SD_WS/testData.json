@@ -1371,6 +1371,18 @@
                   "comment" : "#4"
                }
             ]
+         },
+         {
+            "comment" : "Temp sensor Id: 0C - wrong BCD of temperature",
+            "dmsg" : "W94#0D8C31B60C6C",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#5"
+               }
+            ]
          }
       ],
       "id" : "94",
