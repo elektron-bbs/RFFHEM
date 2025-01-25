@@ -2089,6 +2089,30 @@
                   "comment" : "#1"
                }
             ]
+         },
+         {
+            "comment" : "Thunder and lightning sensor Fine Offset WH57, aka Froggit DP60, aka Ambient Weather WH31L - wrong checksum",
+            "dmsg" : "W116#5740C655053F0A7273",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
+               }
+            ]
+         },
+         {
+            "comment" : "Thunder and lightning sensor Fine Offset WH57, aka Froggit DP60, aka Ambient Weather WH31L - wrong CRC",
+            "dmsg" : "W116#5740C655053F0A7372",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#3"
+               }
+            ]
          }
       ],
       "id" : "116",
