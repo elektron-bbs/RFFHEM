@@ -1137,6 +1137,18 @@
                   "comment" : "#0"
                }
             ]
+         },
+         {
+            "comment" : "Thermo-hygro sensor for base station 35.1140.01 - wrong CRC",
+            "dmsg" : "W125#W85#0C45C60124B0554E8",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
+               }
+            ]
          }
       ],
       "id" : "85",
