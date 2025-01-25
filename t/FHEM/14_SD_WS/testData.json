@@ -437,6 +437,7 @@
    {
       "data" : [
          {
+            "comment" : "NC-3911",
             "dispatch_repeats" : "4",
             "dmsg" : "W38#12A2C5D0C",
             "internals" : {
@@ -457,7 +458,19 @@
                   "comment" : "#0"
                }
             ]
-         }
+         },
+         {
+            "comment" : "NC-3911 - wrong checksum",
+            "dmsg" : "W38#12A2C5FFC",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
+               }
+            ]
+         },
       ],
       "id" : "38",
       "module" : "SD_WS",
