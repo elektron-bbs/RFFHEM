@@ -2434,6 +2434,18 @@
                   "comment" : "#0"
                }
             ]
+         },
+         {
+            "comment" : "Inkbird IBS-P01R Pool Thermometer, Inkbird ITH-20R - wrong CRC",
+            "dmsg" : "W123#D3910F800301005A0655FA001405140535F7",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
+               }
+            ]
          }
       ],
       "id" : "123",
@@ -2461,18 +2473,6 @@
             "tests" : [
                {
                   "comment" : "#0"
-               }
-            ]
-         },
-         {
-            "comment" : "Inkbird IBS-P01R Pool Thermometer, Inkbird ITH-20R - wrong CRC",
-            "dmsg" : "W123#D3910F00010301207E43FE0014055802772A",
-            "tests" : [
-               {
-                  "returns" : {
-                     "ParseFn" : ""
-                  },
-                  "comment" : "#1"
                }
             ]
          }
@@ -2622,7 +2622,7 @@
                      "rawRainCounter" : 90,
                      "type" : "WH40"
                   },
-                  "comment" : "#0"
+                  "comment" : "#1"
                }
             ]
          },         
@@ -2642,32 +2642,32 @@
                      "rawRainCounter" : 0,
                      "type" : "WH40"
                   },
-                  "comment" : "#0"
+                  "comment" : "#2"
                }
             ]
          },
          {
             "comment" : "Ecowitt WH40 rain gauge - wrong checksum ",
-            "dmsg" : "W126#",
+            "dmsg" : "W126#40013E3C900000105CA02A",
             "tests" : [
                {
                   "returns" : {
                      "ParseFn" : ""
                   },
-                  "comment" : "#1"
+                  "comment" : "#3"
                }
             ]
 
          },
          {
             "comment" : "Ecowitt WH40 rain gauge - wrong CRC ",
-            "dmsg" : "W126#",
+            "dmsg" : "W126#40013E3C900000115BA02A",
             "tests" : [
                {
                   "returns" : {
                      "ParseFn" : ""
                   },
-                  "comment" : "#2"
+                  "comment" : "#4"
                }
             ]
 
