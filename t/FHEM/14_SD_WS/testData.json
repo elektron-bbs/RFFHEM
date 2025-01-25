@@ -1378,7 +1378,7 @@
             "tests" : [
                {
                   "returns" : {
-                     "ParseFn" : ""
+                     "ParseFn" : "UNDEFINED SD_WS_94_T SD_WS SD_WS_94_T"
                   },
                   "comment" : "#5"
                }
