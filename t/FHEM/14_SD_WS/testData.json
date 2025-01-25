@@ -1781,6 +1781,18 @@
                   "comment" : "#2"
                }
             ]
+         },
+         {
+            "comment" : "Water tank level monitor with temperature - wrong XOR",
+            "dmsg" : "W111#5F5B8840F110A4008A",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#3"
+               }
+            ]
          }
       ],
       "id" : "111",
