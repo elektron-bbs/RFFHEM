@@ -66,6 +66,18 @@
                   "comment" : "#2"
                }
             ]
+         },
+         {
+            "comment" : "EuroChron weatherstation EFTH-800 / Channel 3  - wrong CRC",
+            "dmsg" : "W27#21D4435075DF",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#3"
+               }
+            ]
          }
       ],
       "id" : "27",
