@@ -904,6 +904,18 @@
                   "comment" : "#0"
                }
             ]
+         },
+         {
+            "comment" : "Thermo-hygro sensor with 2 Repeats - wrong CRC",
+            "dmsg" : "W58#45C8142445DC0",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
+               }
+            ]
          }
       ],
       "id" : "58",
