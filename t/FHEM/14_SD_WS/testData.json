@@ -234,7 +234,7 @@
    {
       "data" : [
          {
-            "comment" : "(ID 33.2,51,53 additionally)",
+            "comment" : "S522 (ID 33.2,51,53 additionally)",
             "dmsg" : "W33#0501DD80038",
             "internals" : {
                "DEF" : "SD_WS_33_T_1",
@@ -253,6 +253,18 @@
                      "model" : "S522"
                   },
                   "comment" : "#0"
+               }
+            ]
+         },
+         {
+            "comment" : "S522 (ID 33.2,51,53 additionally) - wrong CRC",
+            "dmsg" : "W33#0501DD8003F",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
                }
             ]
          }
