@@ -1374,7 +1374,7 @@
          },
          {
             "comment" : "Temp sensor Id: 0C - wrong BCD of temperature",
-            "dmsg" : "W94#0D8C31B60C6C",
+            "dmsg" : "W94#0D803CB60C6C",
             "tests" : [
                {
                   "returns" : {
@@ -1515,6 +1515,30 @@
             "tests" : [
                {
                   "comment" : "#3"
+               }
+            ]
+         },
+         {
+            "comment" : "Fine Offset WH51, ECOWITT WH51, MISOL/1, Froggit DP100 Soil Moisture Sensor - wrong checksum",
+            "dmsg" : "W107#510D48E6107F1B00AA00000010F1",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#4"
+               }
+            ]
+         },
+         {
+            "comment" : "Fine Offset WH51, ECOWITT WH51, MISOL/1, Froggit DP100 Soil Moisture Sensor - wrong CRC",
+            "dmsg" : "W107#510D48E6107F1B00AA00000011F0",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#5"
                }
             ]
          }
