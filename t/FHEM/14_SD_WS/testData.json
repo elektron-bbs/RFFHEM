@@ -700,6 +700,18 @@
                   "comment" : "#0"
                }
             ]
+         },
+         {
+            "comment" : "CH2, Lidl IAN 314695 (ID 33,51 additionally) - wrong checksum",
+            "dmsg" : "W53#0710B88C4FF",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
+               }
+            ]
          }
       ],
       "id" : "53",
