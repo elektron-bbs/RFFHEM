@@ -408,7 +408,7 @@
    {
       "data" : [
          {
-            "comment" : "(ID 61,84,89 additionally)",
+            "comment" : "SD_WS37_TH (ID 61,84,89 additionally)",
             "dmsg" : "W37#D9165C307B",
             "internals" : {
                "DEF" : "SD_WS37_TH_1",
@@ -426,6 +426,18 @@
             "tests" : [
                {
                   "comment" : "#0"
+               }
+            ]
+         },
+         {
+            "comment" : "SD_WS37_TH (ID 61,84,89 additionally) - wrong CRC",
+            "dmsg" : "W37#D9165C307C",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#1"
                }
             ]
          }
