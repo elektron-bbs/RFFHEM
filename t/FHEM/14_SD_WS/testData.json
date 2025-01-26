@@ -430,7 +430,7 @@
             ]
          },
          {
-            "comment" : "SD_WS37_TH (ID 61,84,89 additionally) - wrong CRC",
+            "comment" : "SD_WS37_TH (ID 61,84,89 additionally) - wrong checksum",
             "dmsg" : "W37#D9165C307C",
             "tests" : [
                {
@@ -999,6 +999,18 @@
             "tests" : [
                {
                   "comment" : "#2"
+               }
+            ]
+         },
+         {
+            "comment" : "Fine Offset Electronics WH2, WH2A Temperature/Humidity sensor - wrong CRC",
+            "dmsg" : "W64#FE9041CC812C44",
+            "tests" : [
+               {
+                  "returns" : {
+                     "ParseFn" : ""
+                  },
+                  "comment" : "#3"
                }
             ]
          }
